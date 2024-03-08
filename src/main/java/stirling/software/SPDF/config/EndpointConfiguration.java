@@ -87,6 +87,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("PageOps", "scale-pages");
         addEndpointToGroup("PageOps", "adjust-contrast");
         addEndpointToGroup("PageOps", "crop");
+        addEndpointToGroup("PageOps", "bookletunbind");
         addEndpointToGroup("PageOps", "auto-split-pdf");
         addEndpointToGroup("PageOps", "extract-page");
         addEndpointToGroup("PageOps", "pdf-to-single-page");

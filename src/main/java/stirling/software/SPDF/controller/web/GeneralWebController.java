@@ -104,6 +104,13 @@ public class GeneralWebController {
         return "split-pdf-by-sections";
     }
 
+    @GetMapping("/booklet-unbind-link")
+    @Hidden
+    public String bookletunbind(Model model) {
+        model.addAttribute("currentPage", "booklet-unbind-html"); // link to template
+        return "booklet-unbind-html";
+    }
+
     @GetMapping("/view-pdf")
     @Hidden
     public String ViewPdfForm2(Model model) {
