@@ -46,11 +46,21 @@ public class BookletUnbind {
 
         LayerUtility layerUtility = new LayerUtility(newDocument);
 
+        logger.info("split pages in half, alternating sides, right and left");
+        logger.info("-------------------------------------------------------");
+
         for (int i = 0; i < totalPages; i++) {
             PDPage sourcePage = sourceDocument.getPage(i);
-
             // Create a new page with the size of the source page
             PDPage newPage = new PDPage(sourcePage.getMediaBox());
+            float rotation = sourcePage.getRotation();
+            logger.info("Rotation " + rotation);
+            float width;
+            float height;
+            width = sourcePage.getMediaBox().getWidth();
+            height = sourcePage.getMediaBox().getHeight();
+            logger.info("Width " + width);
+            logger.info("Height " + height);
             newDocument.addPage(newPage);
             PDPageContentStream contentStream =
                     new PDPageContentStream(newDocument, newPage, AppendMode.OVERWRITE, true, true);
@@ -58,24 +68,86 @@ public class BookletUnbind {
             // Import the source page as a form XObject
             PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
 
+            float x, y = 0;
+            float recWidth = width / 2;
+            float recHeight = height;
+            if (i % 2 == 0) { // Si i est paire
+                x = width / 2;
+            } else { // Si i est impaire
+                x = 0;
+            }
+            logger.info(
+                    "Size and Position : x="
+                            + x
+                            + ", y="
+                            + y
+                            + ", Width="
+                            + recWidth
+                            + ", Height="
+                            + recHeight);
+
             contentStream.saveGraphicsState();
-
             // Define the crop area
-            contentStream.addRect(form.getX(), form.getY(), form.getWidth(), form.getHeight());
+            contentStream.addRect(x, y, recWidth, recHeight);
             contentStream.clip();
-
             // Draw the entire formXObject
             contentStream.drawForm(formXObject);
-
             contentStream.restoreGraphicsState();
-
             contentStream.close();
-
             // Now, set the new page's media box to the cropped size
-            newPage.setMediaBox(
-                    new PDRectangle(form.getX(), form.getY(), form.getWidth(), form.getHeight()));
+            newPage.setMediaBox(new PDRectangle(x, y, recWidth, recHeight));
         }
 
+        logger.info(
+                "add pages in reverse order and split pages in half, alternating sides, right and left");
+        for (int i = totalPages - 1; i >= 0; i--) {
+            PDPage sourcePage = sourceDocument.getPage(i);
+            // Create a new page with the size of the source page
+            PDPage newPage = new PDPage(sourcePage.getMediaBox());
+            float rotation = sourcePage.getRotation();
+            logger.info("Rotation " + rotation);
+            float width;
+            float height;
+            width = sourcePage.getMediaBox().getWidth();
+            height = sourcePage.getMediaBox().getHeight();
+            logger.info("Width " + width);
+            logger.info("Height " + height);
+            newDocument.addPage(newPage);
+            PDPageContentStream contentStream =
+                    new PDPageContentStream(newDocument, newPage, AppendMode.OVERWRITE, true, true);
+
+            // Import the source page as a form XObject
+            PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, i);
+
+            float x, y = 0;
+            float recWidth = width / 2;
+            float recHeight = height;
+            if (i % 2 == 0) { // Si i est paire
+                x = 0;
+            } else { // Si i est impaire
+                x = width / 2;
+            }
+            logger.info(
+                    "Size and Position : x="
+                            + x
+                            + ", y="
+                            + y
+                            + ", Width="
+                            + recWidth
+                            + ", Height="
+                            + recHeight);
+
+            contentStream.saveGraphicsState();
+            // Define the crop area
+            contentStream.addRect(x, y, recWidth, recHeight);
+            contentStream.clip();
+            // Draw the entire formXObject
+            contentStream.drawForm(formXObject);
+            contentStream.restoreGraphicsState();
+            contentStream.close();
+            // Now, set the new page's media box to the cropped size
+            newPage.setMediaBox(new PDRectangle(x, y, recWidth, recHeight));
+        }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         newDocument.save(baos);
         newDocument.close();
@@ -85,6 +157,6 @@ public class BookletUnbind {
         return WebResponseUtils.bytesToWebResponse(
                 pdfContent,
                 form.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
-                        + "_cropped.pdf");
+                        + "_unbind.pdf");
     }
 }
